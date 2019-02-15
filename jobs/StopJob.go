@@ -1,18 +1,17 @@
 package jobs
 
 import (
-	"github.com/gw123/gworker/interfaces"
 	"time"
 )
 
 type StopJob struct {
-	Job
+	BaseJob
 }
 
 func NewStopJob() (job *StopJob) {
 	job = new(StopJob)
 	job.CreatedTime = time.Now().Unix()
-	job.Flag = interfaces.JobFlagEnd
+	job.Flag = JobFlagEnd
 	job.runFlag = true
 	return
 }

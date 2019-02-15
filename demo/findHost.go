@@ -34,7 +34,6 @@ func main() {
 		}
 	}()
 
-	group.Start()
 
 	for _, ip := range ipList {
 		job := netScanJob.NewScanJob(ip)

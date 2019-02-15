@@ -1,7 +1,7 @@
 package gworker
 
 import (
-	"github.com/gw123/gworker/interfaces"
+	"github.com/gw123/gworker/jobs"
 	"sync"
 	"fmt"
 	"context"
@@ -35,7 +35,7 @@ func NewWorkerGroup(size uint32) (*WorkerGroup) {
 	return this
 }
 
-func (this *WorkerGroup) DispatchJob(job interfaces.Job) {
+func (this *WorkerGroup) DispatchJob(job jobs.Job) {
 	for this.WorkerPipelines[this.index].IsBusy() {
 		this.index += 1
 		if this.index == this.Length {

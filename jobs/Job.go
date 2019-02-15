@@ -2,12 +2,29 @@ package jobs
 
 import (
 	"io"
-	"time"
-	"github.com/gw123/gworker/interfaces"
 	"fmt"
+	"time"
 )
 
-type Job struct {
+const JobFlagEnd = 2
+const JobFlagNormal = 1
+
+type Job interface {
+	GetPayload() []byte
+	GetCreatedTime() int64
+	GetJobFlag() int64
+	SetWorkerName(string2 string)
+	GetWorkerName() string
+	SetWriteCloser(input io.WriteCloser)
+	SetReadCloser(ouput io.ReadCloser)
+	//执行任务
+	DoJob()
+	// 当前正在执行的任务
+	Cancel()
+}
+
+
+type BaseJob struct {
 	WorkerName  string
 	CreatedTime int64
 	UpdatedTime int64
@@ -20,47 +37,47 @@ type Job struct {
 	runFlag     bool
 }
 
-func NewJob(payload []byte) (job *Job) {
-	job = new(Job)
+func NewJob(payload []byte) (job *BaseJob) {
+	job = new(BaseJob)
 	job.CreatedTime = time.Now().Unix()
 	job.Payload = payload
-	job.Flag = interfaces.JobFlagNormal
+	job.Flag = JobFlagNormal
 	job.runFlag = true
 	return
 }
 
-func (this *Job) SetWriteCloser(input io.WriteCloser) {
+func (this *BaseJob) SetWriteCloser(input io.WriteCloser) {
 	this.Input = input
 }
 
-func (this *Job) SetReadCloser(ouput io.ReadCloser) {
+func (this *BaseJob) SetReadCloser(ouput io.ReadCloser) {
 	this.Output = ouput
 }
 
-func (this *Job) GetWorkerName() string {
+func (this *BaseJob) GetWorkerName() string {
 	return this.WorkerName
 }
 
-func (this *Job) SetWorkerName(workername string) {
+func (this *BaseJob) SetWorkerName(workername string) {
 	this.WorkerName = workername
 }
 
-func (this *Job) GetPayload() []byte {
+func (this *BaseJob) GetPayload() []byte {
 	return this.Payload
 }
 
-func (this *Job) GetCreatedTime() int64 {
+func (this *BaseJob) GetCreatedTime() int64 {
 	return this.CreatedTime
 }
 
-func (this *Job) GetJobFlag() int64 {
+func (this *BaseJob) GetJobFlag() int64 {
 	return this.Flag
 }
 
-func (this *Job) DoJob() {
+func (this *BaseJob) DoJob() {
 	fmt.Println("执行任务：", this.WorkerName, string(this.Payload))
 }
 
-func (this *Job) Cancel() {
+func (this *BaseJob) Cancel() {
 	this.runFlag = true
 }

@@ -26,13 +26,13 @@
     投递任务
     DispatchJob(job interfaces.Job)
 
-    开启任务
+    开启任务队列分发
     Start()
 
-    等待结束
+    等待结束,只有在向worker的队列中发送 stopjob 才结束
     Wait()
 
-    取消为空时循环等待
+    在队列为空时退出
     WaitEmpty()
 
 `

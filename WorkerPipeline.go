@@ -2,7 +2,6 @@ package gworker
 
 import (
 	//"time"
-	"github.com/gw123/gworker/interfaces"
 	"github.com/gw123/gworker/jobs"
 	"fmt"
 	"context"
@@ -15,7 +14,7 @@ const MaxJobs = 10
 
 type WorkerPipeline struct {
 	workerName string
-	Jobs       chan interfaces.Job
+	Jobs       chan jobs.Job
 
 	//读到个channel写入数据 worker 开始执行job
 	startChan chan int
@@ -41,7 +40,7 @@ type WorkerPipeline struct {
  */
 func NewWorker(waitGroup *sync.WaitGroup, isLoopWait bool, ctx context.Context) (workerPipeline *WorkerPipeline) {
 	workerPipeline = new(WorkerPipeline)
-	workerPipeline.Jobs = make(chan interfaces.Job, MaxJobs)
+	workerPipeline.Jobs = make(chan jobs.Job, MaxJobs)
 	workerPipeline.startChan = make(chan int)
 	workerPipeline.stopChan = make(chan int)
 
@@ -98,9 +97,9 @@ func (this *WorkerPipeline) Pause() {
 	this.isBusy = true
 }
 
-func (this *WorkerPipeline) AppendJob(job interfaces.Job) error {
+func (this *WorkerPipeline) AppendJob(job jobs.Job) error {
 	if this.StopFlag {
-		fmt.Println(this.workerName, "Run over!!")
+		fmt.Println(this.workerName, "AppendJob run over!!")
 		return errors.New("流水线运行结束")
 	}
 
@@ -164,7 +163,7 @@ func (this *WorkerPipeline) run() {
 		//fmt.Println(this.WorkerName + "任务执行完成step3")
 	}()
 
-	var job interfaces.Job
+	var job jobs.Job
 	for ; ; {
 		if len(this.Jobs) == 0 && !this.isLoopWait {
 			// 一次性执行的任务 已经完成
@@ -183,9 +182,10 @@ func (this *WorkerPipeline) run() {
 			fmt.Println(this.workerName+"任务暂停，等待唤醒", "StopFlag")
 			<-this.startChan
 		}
+
 		//在使用中注意这里会阻塞
 		job = <-this.Jobs
-		if job.GetJobFlag() == interfaces.JobFlagEnd {
+		if job.GetJobFlag() == jobs.JobFlagEnd {
 			//fmt.Println(this.workerName+" 结束任务", "JobFlagEnd")
 			break
 		}

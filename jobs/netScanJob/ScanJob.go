@@ -2,7 +2,6 @@ package netScanJob
 
 import (
 	"time"
-	"github.com/gw123/gworker/interfaces"
 	"github.com/gw123/gworker/jobs"
 	"fmt"
 	"strconv"
@@ -10,13 +9,13 @@ import (
 )
 
 type ScanJob struct {
-	jobs.Job
+	jobs.BaseJob
 }
 
 func NewScanJob(ip string) (job *ScanJob) {
 	job = new(ScanJob)
 	job.CreatedTime = time.Now().Unix()
-	job.Flag = interfaces.JobFlagNormal
+	job.Flag = jobs.JobFlagNormal
 	job.Payload = []byte(ip)
 	return
 }
