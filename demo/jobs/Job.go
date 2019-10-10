@@ -19,10 +19,9 @@ type Job interface {
 	SetReadCloser(ouput io.ReadCloser)
 	//执行任务
 	DoJob()
-	// 当前正在执行的任务
+	// 取消当前正在执行的任务
 	Cancel()
 }
-
 
 type BaseJob struct {
 	WorkerName  string

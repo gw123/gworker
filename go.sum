@@ -1,0 +1,4 @@
+github.com/gw123/glog v0.0.0-20190903123404-474813a701bd h1:9SdO2NyByNnb9nO3sqRN6j+gHyXAHjhcK3tK15+9Nhg=
+github.com/gw123/glog v0.0.0-20190903123404-474813a701bd/go.mod h1:e+EZM5PnWjuzbSbqxfkaw2Woy+mabwr2GVEUDeNlV6U=
+github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
+github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
