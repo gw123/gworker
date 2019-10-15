@@ -46,10 +46,10 @@ func CreatedJob() *MyJob {
 }
 
 func main() {
-	pool := gworker.NewWorkerPool(nil, time.Second*5, 1000, func(err error, job gworker.Job) {
+	pool := gworker.NewWorkerPool(nil, time.Second*5, 100, func(err error, job gworker.Job) {
 		fmt.Println("ErrorHandle " + err.Error())
 	})
-	pool.PreSecondDealNum(1)
+	pool.PreSecondDealNum(2000)
 	pool.Run()
 
 	go func() {
@@ -61,15 +61,12 @@ func main() {
 	}()
 
 	startTime := time.Now()
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 100000&& !pool.IsStop(); i++ {
 		job := CreatedJob()
 		pool.Push(job)
 	}
 
-	select {
-	case <-pool.Stop():
-		break
-	}
+	pool.Stop()
 	endTime := time.Now()
 	fmt.Printf("cast time %d \n", endTime.Sub(startTime).Nanoseconds()/1000000)
 }
