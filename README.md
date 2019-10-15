@@ -1,4 +1,4 @@
-# golang 实现多个worker去解决大量的任务
+## golang 实现多个worker去解决大量的任务
 
 - 可以设置worker在队列空的时候结束
 - 设置单worker每秒最大执行job数量
@@ -16,6 +16,7 @@ import (
 	"github.com/gw123/gworker"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -56,12 +57,19 @@ func CreatedJob() *MyJob {
 }
 
 func main() {
-	pool := gworker.NewWorkerPool(nil, time.Second*5, 1000, func(err error, job gworker.Job) {
+	var runOverTotal = 1
+	var mutex sync.Mutex
+	pool := gworker.NewWorkerPool(nil, time.Second*5, 100, func(err error, job gworker.Job) {
 		fmt.Println("ErrorHandle " + err.Error())
+	}, func(worker gworker.Worker, job gworker.Job) {
+		mutex.Lock()
+		runOverTotal ++
+		fmt.Println("run over" , runOverTotal)
+		mutex.Unlock()
 	})
-	pool.PreSecondDealNum(1)
+	pool.PreSecondDealNum(10)
 	pool.Run()
-	
+
 	go func() {
 		select {
 		case <-gworker.HandleSignal():
@@ -71,15 +79,12 @@ func main() {
 	}()
 
 	startTime := time.Now()
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 100000&& !pool.IsStop(); i++ {
 		job := CreatedJob()
 		pool.Push(job)
 	}
 
-	select {
-	case <-pool.Stop():
-		break
-	}
+	pool.Stop()
 	endTime := time.Now()
 	fmt.Printf("cast time %d \n", endTime.Sub(startTime).Nanoseconds()/1000000)
 }
@@ -95,8 +100,8 @@ func main() {
     Push(job Job) error
     //开始运行wokerPool
    	Run()
-   	//停止
-   	Stop() chan int
+   	//停止 ,这里可能会阻塞
+   	Stop() 
    	//回收一个空闲的worker
    	RecycleWorker(worker Worker)
    	//获取状态
@@ -107,7 +112,12 @@ func main() {
    	SetErrorHandle(ErrorHandle)
    	//设置每秒处理任务数量
    	PreSecondDealNum(num int)
-
+    //workerPool 是否已经停止运行
+    IsStop() bool
+    //设置任务执行完成后的回调函数
+	SetJobRunOverHandle(JobRunOverHandle)
+    //获取任务执行完成回调
+	GetJobRunOverHandle() JobRunOverHandle
 ```
 
 

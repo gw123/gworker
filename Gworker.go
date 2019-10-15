@@ -2,6 +2,7 @@ package gworker
 
 import (
 	"context"
+	"fmt"
 	"github.com/pkg/errors"
 	"sync"
 	"time"
@@ -24,6 +25,7 @@ type Gworker struct {
 	runCastNs         int64
 	preSecondDealNum  int
 	currentSecondDeal int
+	jobRunOverHandle  JobRunOverHandle
 }
 
 func NewWorker(id int,
@@ -95,6 +97,7 @@ func (w *Gworker) SetErrorHandle(handel ErrorHandle) {
 
 func (w *Gworker) Run() {
 	defer func() {
+		//fmt.Printf("%d stop \n", w.workerId)
 		if w.waitGroup != nil {
 			w.waitGroup.Done()
 		}
@@ -110,42 +113,34 @@ func (w *Gworker) Run() {
 				continue
 			}
 			func() {
+				var err error
 				defer func() {
+					if w.jobRunOverHandle != nil{
+						w.jobRunOverHandle(w, job)
+					}
 					//防止job pnaic 影响协程继续正常工作
-					if err := recover(); err != nil {
-						w.errorHandel(errors.New("recover from panic"), job)
+					if errInfo := recover(); errInfo != nil {
+						info, _ := errInfo.(string)
+						w.errorHandel(errors.New("recover from panic "+info), job)
 					}
 				}()
 				startTime := time.Now()
-				err := job.Run()
+				err = job.Run()
 				if err != nil {
 					w.errorHandel(err, job)
 				}
 				w.runOverTotal++
-				//fmt.Println(w.preSecondDealNum, w.currentSecondDeal)
-				if w.preSecondDealNum > 0 {
-					if w.currentSecondDeal < w.preSecondDealNum {
-						endTime := time.Now()
-						if startTime.Second() == endTime.Second() {
-							w.currentSecondDeal++
-						} else {
-							w.currentSecondDeal = 0
-						}
-						w.runCastNs += endTime.Sub(startTime).Nanoseconds()
-					} else {
-						for ; ; {
-							endTime := time.Now()
-							if startTime.Second() == endTime.Second() {
-								time.Sleep(time.Millisecond)
-							}else{
-								w.currentSecondDeal = 0
-								break
-							}
-						}
-					}
-				}
+				endTime := time.Now()
+				w.runCastNs += endTime.Sub(startTime).Nanoseconds()
 			}()
 			w.pool.RecycleWorker(w)
 		}
 	}
+}
+
+func (w *Gworker) SetJobRunOverHandle(jobRunOverHandle JobRunOverHandle) {
+	if jobRunOverHandle == nil {
+		fmt.Println("jobRunOverHandle..............")
+	}
+	w.jobRunOverHandle = jobRunOverHandle
 }

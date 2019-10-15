@@ -6,6 +6,7 @@ const (
 )
 
 type ErrorHandle func(err error, job Job)
+type JobRunOverHandle func(worker Worker, job Job)
 
 type Job interface {
 	GetJobType() string
@@ -21,18 +22,21 @@ type Worker interface {
 	GetTotalJob() int
 	GetWorkerId() int
 	Status() uint
-	GetErrorHandle() ErrorHandle
 	SetErrorHandle(ErrorHandle)
+	SetJobRunOverHandle(JobRunOverHandle)
 	PreSecondDealNum(num int)
 }
 
 type WorkerPool interface {
 	Push(job Job) error
 	Run()
-	Stop() chan int
+	Stop()
 	RecycleWorker(worker Worker)
 	Status() uint
-	GetErrorHandle() ErrorHandle
 	SetErrorHandle(ErrorHandle)
+	GetErrorHandle() ErrorHandle
+	SetJobRunOverHandle(JobRunOverHandle)
+	GetJobRunOverHandle() JobRunOverHandle
 	PreSecondDealNum(num int)
+	IsStop() bool
 }

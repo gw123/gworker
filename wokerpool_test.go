@@ -67,10 +67,11 @@ func TestRunPoll(t *testing.T) {
 	var total = 1000000
 	mutex := sync.Mutex{}
 	pool := NewWorkerPool(nil, time.Second*5, 1000, func(err error, job Job) {
-		//fmt.Println("ErrorHandle " + err.Error())
 		mutex.Lock()
 		runTotal++
 		mutex.Unlock()
+	}, func(worker Worker, job Job) {
+
 	})
 	pool.PreSecondDealNum(1000)
 	pool.Run()
@@ -80,12 +81,7 @@ func TestRunPoll(t *testing.T) {
 		pool.Push(job)
 	}
 
-
-	select {
-	case <-pool.Stop():
-		break
-	}
-
+	pool.Stop()
 	if runTotal != total {
 		t.Errorf("push job num %d not equal run job num %d", total, runTotal)
 	}
