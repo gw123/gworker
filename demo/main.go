@@ -6,6 +6,7 @@ import (
 	"github.com/gw123/gworker"
 	"runtime"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -46,10 +47,17 @@ func CreatedJob() *MyJob {
 }
 
 func main() {
+	var runOverTotal = 1
+	var mutex sync.Mutex
 	pool := gworker.NewWorkerPool(nil, time.Second*5, 100, func(err error, job gworker.Job) {
 		fmt.Println("ErrorHandle " + err.Error())
+	}, func(worker gworker.Worker, job gworker.Job) {
+		mutex.Lock()
+		runOverTotal ++
+		fmt.Println("run over" , runOverTotal)
+		mutex.Unlock()
 	})
-	pool.PreSecondDealNum(2000)
+	pool.PreSecondDealNum(10)
 	pool.Run()
 
 	go func() {
