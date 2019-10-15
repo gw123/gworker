@@ -47,7 +47,7 @@ func CreatedJob() *MyJob {
 }
 
 func main() {
-	var runOverTotal = 1
+	var runOverTotal = 0
 	var mutex sync.Mutex
 	pool := gworker.NewWorkerPool(nil, time.Second*5, 100, func(err error, job gworker.Job) {
 		fmt.Println("ErrorHandle " + err.Error())
@@ -57,7 +57,7 @@ func main() {
 		fmt.Println("run over" , runOverTotal)
 		mutex.Unlock()
 	})
-	pool.PreSecondDealNum(10)
+	pool.PreSecondDealNum(1000)
 	pool.Run()
 
 	go func() {
