@@ -1,4 +1,4 @@
-package tasks
+package gworker
 
 import (
 	"encoding/json"
@@ -6,27 +6,34 @@ import (
 	"github.com/pkg/errors"
 )
 
-type SMSTask struct {
+const CacheTaskName = "update-cache"
+
+type CacheTask struct {
+	ComId    uint
+	Channel  string
 	TaskName string
+
 	Template string
 	Phone    string
 	Params   []string
 }
 
-func NewSMSTask(phone string, params []string) *SMSTask {
-	return &SMSTask{
-		TaskName: "sms",
-		Template: "a001",
+func NewCacheTask(comId uint, channel, template, phone string, params []string) *CacheTask {
+	return &CacheTask{
+		ComId:    comId,
+		Channel:  channel,
+		TaskName: CacheTaskName,
+		Template: template,
 		Phone:    phone,
 		Params:   params,
 	}
 }
 
-func (S *SMSTask) GetTaskName() string {
-	return "sms"
+func (S *CacheTask) GetTaskName() string {
+	return CacheTaskName
 }
 
-func (S *SMSTask) ToJson() string {
+func (S *CacheTask) ToJson() string {
 	data, err := json.Marshal(S)
 	if err != nil {
 		return ""
@@ -34,16 +41,14 @@ func (S *SMSTask) ToJson() string {
 	return string(data)
 }
 
-func (S *SMSTask) GetHandleFun() interface{} {
+func (S *CacheTask) GetHandleFun() interface{} {
 	return func(data string) error {
-		newTask := new(SMSTask)
+		newTask := new(CacheTask)
 		err := json.Unmarshal([]byte(data), newTask)
 		if err != nil {
 			return errors.Wrap(err, "json.Unmarshal")
 		}
-		glog.Infof("ON SMS TASK %s", data)
 		if len(newTask.Params) == 0 {
-			glog.Errorf("缺少参数 %s", data)
 			return errors.Wrap(err, "缺少参数")
 		}
 		glog.Infof("发送短信到%s,模板：%s,参数:%s", newTask.Phone, newTask.Template, newTask.Params[0])

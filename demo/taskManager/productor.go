@@ -7,7 +7,6 @@ import (
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/gw123/glog"
 	"github.com/gw123/gworker"
-	"github.com/gw123/gworker/demo/taskManager/tasks"
 )
 
 func main() {
@@ -63,7 +62,7 @@ func main() {
 	ctx := context.Background()
 	for i := 0; i < total; i++ {
 		n := fmt.Sprintf("%s-%d", code, i)
-		smstask := tasks.NewSMSTask(phone, []string{n})
+		smstask := gworker.NewSMSTask(1, "aliyun", "login", phone, []string{n})
 		err = taskManager.SendTask(ctx, smstask)
 		if err != nil {
 			glog.Errorf("taskManager.SendTask(ctx, smstask) %s", err)

@@ -5,7 +5,6 @@ import (
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/gw123/glog"
 	"github.com/gw123/gworker"
-	"github.com/gw123/gworker/demo/taskManager/tasks"
 )
 
 func main() {
@@ -42,6 +41,6 @@ func main() {
 		return
 	}
 
-	taskManager.RegisterTask(&tasks.SMSTask{})
+	taskManager.RegisterTask(&gworker.SMSTask{})
 	taskManager.StartWork(consumerTag, workerNum)
 }
