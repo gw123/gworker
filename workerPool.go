@@ -6,6 +6,20 @@ import (
 	"time"
 )
 
+type WorkerPool interface {
+	Push(job Job) error
+	Run()
+	Stop()
+	RecycleWorker(worker Worker)
+	Status() uint
+	SetErrorHandle(ErrorHandle)
+	GetErrorHandle() ErrorHandle
+	SetJobRunOverHandle(JobRunOverHandle)
+	GetJobRunOverHandle() JobRunOverHandle
+	PreSecondDealNum(num int)
+	IsStop() bool
+}
+
 type GworkerPool struct {
 	status               uint
 	ctx                  context.Context

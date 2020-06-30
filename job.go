@@ -1,5 +1,7 @@
 package gworker
 
+import "io"
+
 const (
 	Worker_Running = 1
 	Worker_Free    = 0
@@ -14,29 +16,18 @@ type Job interface {
 	Stop()
 }
 
-type Worker interface {
-	IsBusy() bool
-	Push(job Job) error
-	Run()
-	Stop()
-	GetTotalJob() int
-	GetWorkerId() int
-	Status() uint
-	SetErrorHandle(ErrorHandle)
-	SetJobRunOverHandle(JobRunOverHandle)
-	PreSecondDealNum(num int)
+
+
+type BaseJob struct {
+	WorkerName  string
+	CreatedTime int64
+	UpdatedTime int64
+	Flag        int64
+	JobType     string
+	Payload     []byte
+	Response    []byte
+	Input       io.WriteCloser
+	Output      io.ReadCloser
+	runFlag     bool
 }
 
-type WorkerPool interface {
-	Push(job Job) error
-	Run()
-	Stop()
-	RecycleWorker(worker Worker)
-	Status() uint
-	SetErrorHandle(ErrorHandle)
-	GetErrorHandle() ErrorHandle
-	SetJobRunOverHandle(JobRunOverHandle)
-	GetJobRunOverHandle() JobRunOverHandle
-	PreSecondDealNum(num int)
-	IsStop() bool
-}

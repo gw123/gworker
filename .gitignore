@@ -29,8 +29,8 @@ config.yaml
 config.yml
 # sqlite3
 *.db
+vendor/
 logs
-demo/
 web/
 main.ini
 main.ini.gw
@@ -49,6 +49,8 @@ qiniuUpload.sh
 main
 upload
 node_modules/
+Makefile
+go.sum
 
 
 

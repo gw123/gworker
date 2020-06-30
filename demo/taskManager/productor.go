@@ -61,28 +61,12 @@ func main() {
 	}
 
 	ctx := context.Background()
-	go func() {
-		for i := 0; i < total; i++ {
-			n := fmt.Sprintf("%s-%d", code, i)
-			smstask := tasks.NewSMSTask(phone, []string{n})
-			err = taskManager.SendTask(ctx, smstask)
-			if err != nil {
-				glog.Errorf("taskManager.SendTask(ctx, smstask) %s", err)
-			}
+	for i := 0; i < total; i++ {
+		n := fmt.Sprintf("%s-%d", code, i)
+		smstask := tasks.NewSMSTask(phone, []string{n})
+		err = taskManager.SendTask(ctx, smstask)
+		if err != nil {
+			glog.Errorf("taskManager.SendTask(ctx, smstask) %s", err)
 		}
-	}()
-
-	go func() {
-		for i := 0; i < total; i++ {
-			n := fmt.Sprintf("%s-%d", code, i)
-			smstask := tasks.NewSMSTask(phone, []string{n})
-			err = taskManager.SendTask(ctx, smstask)
-			if err != nil {
-				glog.Errorf("taskManager.SendTask(ctx, smstask) %s", err)
-			}
-		}
-	}()
-	select {
-
 	}
 }

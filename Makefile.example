@@ -1,5 +1,5 @@
-Broker="amqp://gw:gao123456@localhost:5672/"
-ResultBackend="redis://gao123456xyt!@127.0.0.1:6379"
+Broker="amqp://root:123456@localhost:5672/"
+ResultBackend="redis://123456@127.0.0.1:6379"
 phone=18618184632
 code=1234
 

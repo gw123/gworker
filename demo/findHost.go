@@ -6,6 +6,7 @@ import (
 	"github.com/gw123/gworker/demo/jobs/netScanJob"
 	"github.com/gw123/net_tool/netInterfaces"
 	_ "net/http/pprof"
+	"time"
 )
 
 /****
@@ -18,8 +19,12 @@ func main() {
 		return
 	}
 
-	group := old.NewWorkerGroup(50)
-	group.Start()
+	group := gworker.NewWorkerPool(nil, time.Second*5, 100,
+		func(err error, job gworker.Job) {
+			fmt.Println("ErrorHandle " + err.Error())
+		}, func(worker gworker.Worker, job gworker.Job) {
+
+		})
 
 	go func() {
 		select {
@@ -31,8 +36,8 @@ func main() {
 
 	for _, ip := range ipList {
 		job := netScanJob.NewScanJob(ip)
-		group.DispatchJob(job)
+		group.Push(job)
 	}
 
-	group.WaitEmpty()
+	group.Run()
 }

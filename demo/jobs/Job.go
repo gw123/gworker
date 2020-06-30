@@ -23,18 +23,6 @@ type Job interface {
 	Cancel()
 }
 
-type BaseJob struct {
-	WorkerName  string
-	CreatedTime int64
-	UpdatedTime int64
-	Flag        int64
-	JobType     string
-	Payload     []byte
-	Response    []byte
-	Input       io.WriteCloser
-	Output      io.ReadCloser
-	runFlag     bool
-}
 
 func NewJob(payload []byte) (job *BaseJob) {
 	job = new(BaseJob)

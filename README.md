@@ -1,3 +1,12 @@
+## taskManager 任务管理器参考demo中 taskManager 中的例子
+```
+//修改Broker地址
+//修改ResultBacnend地址
+mv Makefile.example Makefile
+make
+//taskManager 配置详细用法参考 https://github.com/RichardKnop/machinery
+```
+
 ## golang 实现多个worker去解决大量的任务
 
 - 可以设置worker在队列空的时候结束

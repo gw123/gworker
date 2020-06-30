@@ -2,11 +2,23 @@ package gworker
 
 import (
 	"context"
-	"fmt"
 	"github.com/pkg/errors"
 	"sync"
 	"time"
 )
+
+type Worker interface {
+	IsBusy() bool
+	Push(job Job) error
+	Run()
+	Stop()
+	GetTotalJob() int
+	GetWorkerId() int
+	Status() uint
+	SetErrorHandle(ErrorHandle)
+	SetJobRunOverHandle(JobRunOverHandle)
+	PreSecondDealNum(num int)
+}
 
 type Gworker struct {
 	cancelFunc        context.CancelFunc
@@ -115,7 +127,7 @@ func (w *Gworker) Run() {
 			func() {
 				var err error
 				defer func() {
-					if w.jobRunOverHandle != nil{
+					if w.jobRunOverHandle != nil {
 						w.jobRunOverHandle(w, job)
 					}
 					//防止job pnaic 影响协程继续正常工作
@@ -140,7 +152,7 @@ func (w *Gworker) Run() {
 
 func (w *Gworker) SetJobRunOverHandle(jobRunOverHandle JobRunOverHandle) {
 	if jobRunOverHandle == nil {
-		fmt.Println("jobRunOverHandle..............")
+		return
 	}
 	w.jobRunOverHandle = jobRunOverHandle
 }

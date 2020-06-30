@@ -12,6 +12,18 @@ type ScanJob struct {
 	jobs2.BaseJob
 }
 
+func (this *ScanJob) GetJobType() string {
+	panic("implement me")
+}
+
+func (this *ScanJob) Run() error {
+	panic("implement me")
+}
+
+func (this *ScanJob) Stop() {
+	panic("implement me")
+}
+
 func NewScanJob(ip string) (job *ScanJob) {
 	job = new(ScanJob)
 	job.CreatedTime = time.Now().Unix()
