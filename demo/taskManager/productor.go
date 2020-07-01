@@ -10,18 +10,6 @@ import (
 )
 
 func main() {
-	//conf := &config.Config{
-	//	Broker:        "amqp://gw:gao123456@localhost:5672/",
-	//	DefaultQueue:  "machinery_tasks",
-	//	ResultBackend: "redis://gao123456xyt!@127.0.0.1:6379",
-	//	AMQP: &config.AMQPConfig{
-	//		Exchange:      "machinery_exchange",
-	//		ExchangeType:  "direct",
-	//		BindingKey:    "machinery_task",
-	//		PrefetchCount: 1,
-	//	},
-	//}
-	//taskManager, err := gworker.NewTaskManager(conf, "task1")
 	broker := ""
 	queue := ""
 	resultbackend := ""
@@ -31,6 +19,7 @@ func main() {
 	phone := ""
 	code := ""
 	total := 0
+	comId := 0
 	flag.StringVar(&broker, "broker", "amqp: //root:123456@localhost:5672/", "broker")
 	flag.StringVar(&queue, "queue", "test_task", "queue")
 	flag.StringVar(&resultbackend, "result", "redis://123456@127.0.0.1:6379", "result backend")
@@ -39,6 +28,7 @@ func main() {
 	flag.StringVar(&phone, "phone", "18611112222", "phone")
 	flag.StringVar(&code, "code", "2010", "code")
 	flag.IntVar(&total, "total", 1, "total")
+	flag.IntVar(&comId, "com_id", 0, "com_id")
 	flag.Parse()
 
 	conf := &config.Config{
@@ -46,9 +36,9 @@ func main() {
 		DefaultQueue:  queue,
 		ResultBackend: resultbackend,
 		AMQP: &config.AMQPConfig{
-			Exchange:      exchange,
+			Exchange:      queue,
 			ExchangeType:  "direct",
-			BindingKey:    bindingKey,
+			BindingKey:    queue,
 			PrefetchCount: 1,
 		},
 	}
@@ -62,7 +52,8 @@ func main() {
 	ctx := context.Background()
 	for i := 0; i < total; i++ {
 		n := fmt.Sprintf("%s-%d", code, i)
-		smstask := gworker.NewSMSTask(1, "aliyun", "login", phone, []string{n})
+		smstask := gworker.NewSMSTask(uint(comId), "aliyun", "login", []string{phone}, n)
+		smstask.Type = "loginCode"
 		err = taskManager.SendTask(ctx, smstask)
 		if err != nil {
 			glog.Errorf("taskManager.SendTask(ctx, smstask) %s", err)

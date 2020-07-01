@@ -13,19 +13,19 @@ type SMSTask struct {
 	Channel  string
 	TaskName string
 
-	Template string
-	Phone    string
-	Params   []string
+	Type          string
+	PhoneNumbers  []string
+	TemplateParam string
 }
 
-func NewSMSTask(comId uint, channel, template, phone string, params []string) *SMSTask {
+func NewSMSTask(comId uint, channel, template string, phones []string, params string) *SMSTask {
 	return &SMSTask{
-		ComId:    comId,
-		Channel:  channel,
-		TaskName: SMSTaskName,
-		Template: template,
-		Phone:    phone,
-		Params:   params,
+		ComId:         comId,
+		Channel:       channel,
+		TaskName:      SMSTaskName,
+		Type:          template,
+		PhoneNumbers:  phones,
+		TemplateParam: params,
 	}
 }
 
@@ -48,10 +48,10 @@ func (S *SMSTask) GetHandleFun() interface{} {
 		if err != nil {
 			return errors.Wrap(err, "json.Unmarshal")
 		}
-		if len(newTask.Params) == 0 {
+		if len(newTask.TemplateParam) == 0 {
 			return errors.Wrap(err, "缺少参数")
 		}
-		glog.Infof("发送短信到%s,模板：%s,参数:%s", newTask.Phone, newTask.Template, newTask.Params[0])
+		glog.Infof("发送短信到%+v,模板：%s,参数:%s", newTask.PhoneNumbers, newTask.Type, newTask.TemplateParam)
 		return nil
 	}
 }
