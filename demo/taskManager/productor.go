@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/gw123/glog"
-	"github.com/gw123/gworker"
+	"github.com/gw123/gworker/task"
 )
 
 func main() {
@@ -43,7 +43,7 @@ func main() {
 		},
 	}
 
-	taskManager, err := gworker.NewTaskManager(conf, "")
+	taskManager, err := task.NewTaskManager(conf, "")
 	if err != nil {
 		glog.Errorf("NewTaskManager %s", err)
 		return
@@ -51,8 +51,10 @@ func main() {
 
 	ctx := context.Background()
 	for i := 0; i < total; i++ {
-		n := fmt.Sprintf("%s-%d", code, i)
-		smstask := gworker.NewSMSTask(uint(comId), "aliyun", "login", []string{phone}, n)
+		params := make(map[string]string)
+		params["code"] = code
+		data, _ := json.Marshal(params)
+		smstask := NewSMSTask(uint(comId), "aliyun", "login", []string{phone}, string(data))
 		smstask.Type = "loginCode"
 		err = taskManager.SendTask(ctx, smstask)
 		if err != nil {

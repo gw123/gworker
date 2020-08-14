@@ -1,4 +1,4 @@
-package gworker
+package main
 
 import (
 	"encoding/json"
@@ -29,7 +29,7 @@ func NewSMSTask(comId uint, channel, template string, phones []string, params st
 	}
 }
 
-func (S *SMSTask) GetTaskName() string {
+func (S *SMSTask) TaskName() string {
 	return SMSTaskName
 }
 
@@ -41,17 +41,15 @@ func (S *SMSTask) ToJson() string {
 	return string(data)
 }
 
-func (S *SMSTask) GetHandleFun() interface{} {
-	return func(data string) error {
-		newTask := new(SMSTask)
-		err := json.Unmarshal([]byte(data), newTask)
-		if err != nil {
-			return errors.Wrap(err, "json.Unmarshal")
-		}
-		if len(newTask.TemplateParam) == 0 {
-			return errors.Wrap(err, "缺少参数")
-		}
-		glog.Infof("发送短信到%+v,模板：%s,参数:%s", newTask.PhoneNumbers, newTask.Type, newTask.TemplateParam)
-		return nil
+func (S *SMSTask) HandleFun(data []byte) error {
+	newTask := new(SMSTask)
+	err := json.Unmarshal(data, newTask)
+	if err != nil {
+		return errors.Wrap(err, "json.Unmarshal")
 	}
+	if len(newTask.TemplateParam) == 0 {
+		return errors.Wrap(err, "缺少参数")
+	}
+	glog.Infof("发送短信到%+v,模板：%s,参数:%s", newTask.PhoneNumbers, newTask.Type, newTask.TemplateParam)
+	return nil
 }

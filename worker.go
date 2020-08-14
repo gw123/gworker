@@ -3,9 +3,19 @@ package gworker
 import (
 	"context"
 	"github.com/pkg/errors"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 )
+
+func HandleSignal() chan os.Signal {
+	c := make(chan os.Signal)
+	signal.Notify(c, syscall.SIGINT)
+	signal.Notify(c, syscall.SIGTERM)
+	return c
+}
 
 type Worker interface {
 	IsBusy() bool

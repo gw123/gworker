@@ -4,7 +4,7 @@ import (
 	"flag"
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/gw123/glog"
-	"github.com/gw123/gworker"
+	"github.com/gw123/gworker/task"
 )
 
 func main() {
@@ -35,12 +35,12 @@ func main() {
 			PrefetchCount: 1,
 		},
 	}
-	taskManager, err := gworker.NewTaskManager(conf, consumerTag)
+	taskManager, err := task.NewTaskManager(conf, consumerTag)
 	if err != nil {
 		glog.Errorf("NewTaskManager : %s", err.Error())
 		return
 	}
 
-	taskManager.RegisterTask(&gworker.SMSTask{})
+	taskManager.RegisterTask(&SMSTask{})
 	taskManager.StartWork(consumerTag, workerNum)
 }

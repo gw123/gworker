@@ -16,8 +16,6 @@ type Job interface {
 	Stop()
 }
 
-
-
 type BaseJob struct {
 	WorkerName  string
 	CreatedTime int64
