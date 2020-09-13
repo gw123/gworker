@@ -51,6 +51,8 @@ upload
 node_modules/
 Makefile
 go.sum
+env.sh
+.env
 
 
 

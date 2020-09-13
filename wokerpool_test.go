@@ -29,55 +29,28 @@ func NewMyJob(data string) *MyJob {
 	}
 }
 
-func (j *MyJob) GetJobType() string {
-	return "myjob"
-}
-
-func (j *MyJob) Run() error {
-	fmt.Printf("GID:%d ,%s\n", GetGID(), j.data)
-	return nil
-}
-
-func (j *MyJob) Stop() {
-}
-
-type ErrJob struct {
-	MyJob
-}
-
-func NewErrJob(data string) *ErrJob {
-	return &ErrJob{
-		MyJob{data: data},
-	}
-}
-
-func (j *ErrJob) Run() error {
+func (j *MyJob) Handle() error {
 	//fmt.Printf("GID:%d ,%s\n", GetGID(), j.data)
-	panic("test painc")
 	return nil
-}
-
-func CreatedJob() *ErrJob {
-	return NewErrJob("Job Creted : " + time.Now().Format("15:04:05"))
 }
 
 func TestRunPoll(t *testing.T) {
 
 	var runTotal = 0
-	var total = 1000000
+	var total = 10 *0000
 	mutex := sync.Mutex{}
-	pool := NewWorkerPool(nil, time.Second*5, 1000, func(err error, job Job) {
+	pool := NewWorkerPool(nil, time.Second*5, 1000, func(err error, job Tasker) {
+
+	}, func(worker Worker, job Tasker) {
 		mutex.Lock()
 		runTotal++
 		mutex.Unlock()
-	}, func(worker Worker, job Job) {
-
 	})
-	pool.PreSecondDealNum(1000)
+	pool.PreSecondDealNum(10 *0000)
 	pool.Run()
 
 	for i := 1; i <= total; i++ {
-		job := CreatedJob()
+		job := NewMyJob(fmt.Sprintf("id: %d", i))
 		pool.Push(job)
 	}
 

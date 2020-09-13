@@ -1,4 +1,4 @@
-package main
+package smsTask
 
 import (
 	"encoding/json"
@@ -6,10 +6,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-const SMSTaskName = "sms"
+const SMSTaskName = "ticket-send-code-sms"
 
 type SMSTask struct {
 	ComId    uint
+	Id    string
 	Channel  string
 	TaskName string
 
@@ -29,21 +30,21 @@ func NewSMSTask(comId uint, channel, template string, phones []string, params st
 	}
 }
 
-func (S *SMSTask) TaskName() string {
+func (s *SMSTask) GetID() string {
+	return s.Id
+}
+
+func (s *SMSTask) Trace() []string {
+     return nil
+}
+
+func (s *SMSTask) GetName() string {
 	return SMSTaskName
 }
 
-func (S *SMSTask) ToJson() string {
-	data, err := json.Marshal(S)
-	if err != nil {
-		return ""
-	}
-	return string(data)
-}
-
-func (S *SMSTask) HandleFun(data []byte) error {
+func (s *SMSTask) HandleFun(data string) error {
 	newTask := new(SMSTask)
-	err := json.Unmarshal(data, newTask)
+	err := json.Unmarshal([]byte(data), newTask)
 	if err != nil {
 		return errors.Wrap(err, "json.Unmarshal")
 	}

@@ -19,7 +19,7 @@ func HandleSignal() chan os.Signal {
 
 type Worker interface {
 	IsBusy() bool
-	Push(job Job) error
+	Push(job Tasker) error
 	Run()
 	Stop()
 	GetTotalJob() int
@@ -38,7 +38,7 @@ type Gworker struct {
 	waitTime          time.Duration
 	errorHandel       ErrorHandle
 	pool              WorkerPool
-	job               chan Job
+	job               chan Tasker
 	stopFlag          bool
 	status            uint
 	workerId          int
@@ -68,7 +68,7 @@ func NewWorker(id int,
 		waitGroup:   waitGroup,
 		cancelFunc:  cancelFunc,
 		errorHandel: pool.GetErrorHandle(),
-		job:         make(chan Job, jobSize),
+		job:         make(chan Tasker, jobSize),
 	}
 	return worker
 }
@@ -77,7 +77,7 @@ func (w *Gworker) PreSecondDealNum(num int) {
 	w.preSecondDealNum = num
 }
 
-func (w *Gworker) Push(job Job) error {
+func (w *Gworker) Push(job Tasker) error {
 	if w.stopFlag {
 		return errors.New("worker stop")
 	}
@@ -147,7 +147,7 @@ func (w *Gworker) Run() {
 					}
 				}()
 				startTime := time.Now()
-				err = job.Run()
+				err = job.Handle()
 				if err != nil {
 					w.errorHandel(err, job)
 				}

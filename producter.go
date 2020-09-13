@@ -1,7 +1,8 @@
-package task
+package gworker
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/RichardKnop/machinery/v1"
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/RichardKnop/machinery/v1/tasks"
@@ -28,7 +29,7 @@ func NewPorducerManager(cfg *config.Config) (*ProducerManager, error) {
 }
 
 func (w *ProducerManager) PostTask(ctx context.Context, task Task) error {
-	data, err := task.MarshalJSON()
+	data, err :=  json.Marshal(task)
 	if err != nil {
 		return errors.Wrap(err, "task.marshalJson")
 	}
@@ -40,7 +41,7 @@ func (w *ProducerManager) PostTask(ctx context.Context, task Task) error {
 		Value: string(data),
 	}
 
-	signTask, err := tasks.NewSignature(task.TaskName(), args)
+	signTask, err := tasks.NewSignature(task.GetName(), args)
 	if err != nil {
 		return errors.Wrap(err, "signature")
 	}

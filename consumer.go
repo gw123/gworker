@@ -1,4 +1,4 @@
-package task
+package gworker
 
 import (
 	"github.com/RichardKnop/machinery/v1"
@@ -9,7 +9,7 @@ import (
 )
 
 type Consumer interface {
-	RegisterTask(task TaskHandle) error
+	RegisterTask(worker TaskHandle) error
 	StartWork(comsumeTag string, num int)
 	SetPostTaskHandler(postTaskHandler func(*tasks.Signature))
 	SetErrorHandler(errorHandler func(err error))
@@ -42,7 +42,7 @@ func NewConsumer(cfg *config.Config, consumerTag string) (*ConsumerManager, erro
 }
 
 func (w *ConsumerManager) RegisterTask(task TaskHandle) error {
-	w.mqServer.RegisterTask(task.GetTaskName(), task.HandleFun)
+	w.mqServer.RegisterTask(task.GetName(), task.HandleFun)
 	return nil
 }
 

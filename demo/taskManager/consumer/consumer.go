@@ -4,7 +4,8 @@ import (
 	"flag"
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/gw123/glog"
-	"github.com/gw123/gworker/task"
+	"github.com/gw123/gworker"
+	smsTask "github.com/gw123/gworker/demo/taskManager"
 )
 
 func main() {
@@ -15,13 +16,11 @@ func main() {
 	bindingKey := ""
 	consumerTag := ""
 	workerNum := 0
-	flag.StringVar(&broker, "broker", "amqp: //gw:gao123456@localhost:5672/", "broker")
-	flag.StringVar(&queue, "queue", "test_task", "queue")
-	flag.StringVar(&resultbackend, "result", "redis://123456@127.0.0.1:6379", "result")
-	flag.StringVar(&exchange, "exchange", "test_task", "ampq exchange")
-	flag.StringVar(&bindingKey, "binding", "test_task", "binding-key")
-	flag.StringVar(&consumerTag, "consumer", "consume_01", "consumeTag")
-	flag.IntVar(&workerNum, "worker", 0, "worker num")
+	flag.StringVar(&broker, "broker", "", "broker")
+	flag.StringVar(&queue, "queue", "ticket-send-code-sms", "queue")
+	flag.StringVar(&resultbackend, "result", "redis://123456@127.0.0.1:6379", "result backend")
+	flag.StringVar(&exchange, "exchange", "ticket", "ampq exchange")
+	flag.StringVar(&bindingKey, "binding", "ticket-send-code-sms", "binding-key")
 	flag.Parse()
 
 	conf := &config.Config{
@@ -35,12 +34,12 @@ func main() {
 			PrefetchCount: 1,
 		},
 	}
-	taskManager, err := task.NewTaskManager(conf, consumerTag)
+	taskManager, err := gworker.NewConsumer(conf, consumerTag)
 	if err != nil {
 		glog.Errorf("NewTaskManager : %s", err.Error())
 		return
 	}
 
-	taskManager.RegisterTask(&SMSTask{})
+	taskManager.RegisterTask(&smsTask.SMSTask{})
 	taskManager.StartWork(consumerTag, workerNum)
 }
