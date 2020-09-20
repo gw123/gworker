@@ -47,6 +47,7 @@ func (w *ProducerManager) PostJob(ctx context.Context, job Job) error {
 		return errors.Wrap(err, "signature")
 	}
 
+	signTask.RoutingKey = job.GetName()
 	signTask.RetryCount = job.RetryCount()
 
 	if job.Delay() !=0 {
