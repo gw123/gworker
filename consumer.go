@@ -1,6 +1,7 @@
 package gworker
 
 import (
+	"encoding/json"
 	"github.com/RichardKnop/machinery/v1"
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/RichardKnop/machinery/v1/tasks"
@@ -9,7 +10,7 @@ import (
 )
 
 type Consumer interface {
-	RegisterTask(worker TaskHandle) error
+	RegisterTask(worker Jobber) error
 	StartWork(comsumeTag string, num int)
 	SetPostTaskHandler(postTaskHandler func(*tasks.Signature))
 	SetErrorHandler(errorHandler func(err error))
@@ -41,8 +42,14 @@ func NewConsumer(cfg *config.Config, consumerTag string) (*ConsumerManager, erro
 	}, nil
 }
 
-func (w *ConsumerManager) RegisterTask(job JobHandle) error {
-	w.mqServer.RegisterTask(job.GetName(), job.HandleFun)
+func (w *ConsumerManager) RegisterTask(job Jobber) error {
+	w.mqServer.RegisterTask(job.GetName(), func(data string) error {
+		err := json.Unmarshal([]byte(data), job)
+		if err != nil{
+			return err
+		}
+		return job.Handle()
+	})
 	return nil
 }
 

@@ -1,7 +1,6 @@
 package smsTask
 
 import (
-	"encoding/json"
 	"github.com/gw123/glog"
 	"github.com/pkg/errors"
 	"time"
@@ -48,18 +47,13 @@ func (s *SMSTask) RetryCount() int  {
 }
 
 func (s *SMSTask) Delay() time.Duration  {
-	return time.Second * 20
+	return time.Second * 2
 }
 
-func (s *SMSTask) HandleFun(data string) error {
-	newTask := new(SMSTask)
-	err := json.Unmarshal([]byte(data), newTask)
-	if err != nil {
-		return errors.Wrap(err, "json.Unmarshal")
+func (s *SMSTask) Handle( ) error {
+	if len(s.TemplateParam) == 0 {
+		return errors.New( "缺少参数")
 	}
-	if len(newTask.TemplateParam) == 0 {
-		return errors.Wrap(err, "缺少参数")
-	}
-	glog.Infof("发送短信到%+v,模板：%s,参数:%s", newTask.PhoneNumbers, newTask.Type, newTask.TemplateParam)
+	glog.Infof("发送短信到%+v,模板：%s,参数:%s", s.PhoneNumbers, s.Type, s.TemplateParam)
 	return nil
 }

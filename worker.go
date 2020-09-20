@@ -38,7 +38,7 @@ type Gworker struct {
 	waitTime          time.Duration
 	errorHandel       ErrorHandle
 	pool              WorkerPool
-	job               chan Tasker
+	job               chan Jobber
 	stopFlag          bool
 	status            uint
 	workerId          int
@@ -68,7 +68,7 @@ func NewWorker(id int,
 		waitGroup:   waitGroup,
 		cancelFunc:  cancelFunc,
 		errorHandel: pool.GetErrorHandle(),
-		job:         make(chan Tasker, jobSize),
+		job:         make(chan Jobber, jobSize),
 	}
 	return worker
 }

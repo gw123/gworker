@@ -11,7 +11,7 @@ import (
 )
 
 type Producer interface {
-	PostTask(ctx context.Context, task Task) error
+	PostTask(ctx context.Context, task Job) error
 }
 
 type ProducerManager struct {
