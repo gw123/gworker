@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/gw123/glog"
 	"github.com/gw123/gworker"
@@ -23,10 +22,10 @@ func main() {
 	total := 0
 	comId := 0
 	flag.StringVar(&broker, "broker", "amqp://xyt:123@qys:5672/", "broker")
-	flag.StringVar(&queue, "queue", "ticket-send-code-sms", "queue")
+	flag.StringVar(&queue, "queue", "sms", "queue")
 	flag.StringVar(&resultbackend, "result", "redis://123456@127.0.0.1:6379", "result backend")
-	flag.StringVar(&exchange, "exchange", "ticket", "ampq exchange")
-	flag.StringVar(&bindingKey, "binding", "ticket-send-code-sms", "binding-key")
+	flag.StringVar(&exchange, "exchange", "sms", "ampq exchange")
+	flag.StringVar(&bindingKey, "binding", "sms", "binding-key")
 	flag.StringVar(&phone, "phone", "18611112222", "phone")
 	flag.StringVar(&code, "code", "2010", "code")
 	flag.IntVar(&total, "total", 1, "total")
@@ -52,14 +51,13 @@ func main() {
 	}
 
 	ctx := context.Background()
-	fmt.Println(total)
 	for i := 0; i < total; i++ {
 		params := make(map[string]string)
 		params["code"] = code
 		data, _ := json.Marshal(params)
 		smstask := smsTask.NewSMSTask(uint(comId), "aliyun", "login", []string{phone}, string(data))
-		smstask.Type = "loginCode"
-		err = taskManager.PostTask(ctx, smstask)
+		smstask.Type = "ticketCode"
+		err = taskManager.PostJob(ctx, smstask)
 		if err != nil {
 			glog.Errorf("taskManager.SendTask(ctx, smstask) %s", err)
 		}

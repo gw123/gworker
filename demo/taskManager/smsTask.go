@@ -4,9 +4,10 @@ import (
 	"encoding/json"
 	"github.com/gw123/glog"
 	"github.com/pkg/errors"
+	"time"
 )
 
-const SMSTaskName = "ticket-send-code-sms"
+const SMSTaskName = "sms"
 
 type SMSTask struct {
 	ComId    uint
@@ -40,6 +41,14 @@ func (s *SMSTask) Trace() []string {
 
 func (s *SMSTask) GetName() string {
 	return SMSTaskName
+}
+
+func (s *SMSTask) RetryCount() int  {
+	return 2
+}
+
+func (s *SMSTask) Delay() time.Duration  {
+	return time.Second * 20
 }
 
 func (s *SMSTask) HandleFun(data string) error {

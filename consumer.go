@@ -41,8 +41,8 @@ func NewConsumer(cfg *config.Config, consumerTag string) (*ConsumerManager, erro
 	}, nil
 }
 
-func (w *ConsumerManager) RegisterTask(task TaskHandle) error {
-	w.mqServer.RegisterTask(task.GetName(), task.HandleFun)
+func (w *ConsumerManager) RegisterTask(job JobHandle) error {
+	w.mqServer.RegisterTask(job.GetName(), job.HandleFun)
 	return nil
 }
 

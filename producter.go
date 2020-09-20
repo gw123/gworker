@@ -7,6 +7,7 @@ import (
 	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/RichardKnop/machinery/v1/tasks"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type Producer interface {
@@ -28,10 +29,10 @@ func NewPorducerManager(cfg *config.Config) (*ProducerManager, error) {
 	}, nil
 }
 
-func (w *ProducerManager) PostTask(ctx context.Context, task Task) error {
-	data, err :=  json.Marshal(task)
+func (w *ProducerManager) PostJob(ctx context.Context, job Job) error {
+	data, err :=  json.Marshal(job)
 	if err != nil {
-		return errors.Wrap(err, "task.marshalJson")
+		return errors.Wrap(err, "job.marshalJson")
 	}
 
 	args := make([]tasks.Arg, 1)
@@ -41,11 +42,18 @@ func (w *ProducerManager) PostTask(ctx context.Context, task Task) error {
 		Value: string(data),
 	}
 
-	signTask, err := tasks.NewSignature(task.GetName(), args)
+	signTask, err := tasks.NewSignature(job.GetName(), args)
 	if err != nil {
 		return errors.Wrap(err, "signature")
 	}
-	signTask.RetryCount = 5
+
+	signTask.RetryCount = job.RetryCount()
+
+	if job.Delay() !=0 {
+		eta := time.Now().UTC().Add(job.Delay())
+		signTask.ETA =  &eta
+	}
+
 	_, err = w.mqServer.SendTaskWithContext(ctx, signTask)
 	if err != nil {
 		return errors.Wrap(err, "SendTaskWithContext")

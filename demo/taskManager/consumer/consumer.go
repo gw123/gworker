@@ -17,10 +17,10 @@ func main() {
 	consumerTag := ""
 	workerNum := 0
 	flag.StringVar(&broker, "broker", "", "broker")
-	flag.StringVar(&queue, "queue", "ticket-send-code-sms", "queue")
+	flag.StringVar(&queue, "queue", "sms", "queue")
 	flag.StringVar(&resultbackend, "result", "redis://123456@127.0.0.1:6379", "result backend")
-	flag.StringVar(&exchange, "exchange", "ticket", "ampq exchange")
-	flag.StringVar(&bindingKey, "binding", "ticket-send-code-sms", "binding-key")
+	flag.StringVar(&exchange, "exchange", "sms", "ampq exchange")
+	flag.StringVar(&bindingKey, "binding", "sms", "binding-key")
 	flag.Parse()
 
 	conf := &config.Config{

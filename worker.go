@@ -19,7 +19,7 @@ func HandleSignal() chan os.Signal {
 
 type Worker interface {
 	IsBusy() bool
-	Push(job Tasker) error
+	Push(job Jobber) error
 	Run()
 	Stop()
 	GetTotalJob() int
@@ -77,7 +77,7 @@ func (w *Gworker) PreSecondDealNum(num int) {
 	w.preSecondDealNum = num
 }
 
-func (w *Gworker) Push(job Tasker) error {
+func (w *Gworker) Push(job Jobber) error {
 	if w.stopFlag {
 		return errors.New("worker stop")
 	}
