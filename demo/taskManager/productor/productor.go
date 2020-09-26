@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/gw123/glog"
 	"github.com/gw123/gworker"
 	smsTask "github.com/gw123/gworker/demo/taskManager"
@@ -32,11 +31,11 @@ func main() {
 	flag.IntVar(&comId, "com_id", 0, "com_id")
 	flag.Parse()
 
-	conf := &config.Config{
+	conf := &gworker.Options{
 		Broker:        broker,
 		DefaultQueue:  queue,
 		ResultBackend: resultbackend,
-		AMQP: &config.AMQPConfig{
+		AMQP: &gworker.AMQPOptions{
 			Exchange:      queue,
 			ExchangeType:  "direct",
 			BindingKey:    queue,

@@ -9,6 +9,9 @@ import (
 	"github.com/pkg/errors"
 )
 
+
+
+
 type Consumer interface {
 	RegisterTask(worker Jobber) error
 	StartWork(comsumeTag string, num int)
@@ -27,7 +30,19 @@ type ConsumerManager struct {
 	preConsumeHandler func(*Consumer) bool
 }
 
-func NewConsumer(cfg *config.Config, consumerTag string) (*ConsumerManager, error) {
+func NewConsumer(opt * Options, consumerTag string) (*ConsumerManager, error) {
+	cfg := &config.Config{
+		Broker:        opt.Broker,
+		DefaultQueue:  opt.DefaultQueue,
+		ResultBackend: opt.ResultBackend,
+		AMQP: &config.AMQPConfig{
+			Exchange:      opt.AMQP.Exchange,
+			ExchangeType:  opt.AMQP.ExchangeType,
+			PrefetchCount: opt.AMQP.PrefetchCount,
+			AutoDelete:    opt.AMQP.AutoDelete,
+		},
+	}
+
 	server, err := machinery.NewServer(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "create server")

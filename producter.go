@@ -18,7 +18,19 @@ type ProducerManager struct {
 	mqServer *machinery.Server
 }
 
-func NewPorducerManager(cfg *config.Config) (*ProducerManager, error) {
+func NewPorducerManager(opt *Options) (*ProducerManager, error) {
+	cfg := &config.Config{
+		Broker:        opt.Broker,
+		DefaultQueue:  opt.DefaultQueue,
+		ResultBackend: opt.ResultBackend,
+		AMQP: &config.AMQPConfig{
+			Exchange:      opt.AMQP.Exchange,
+			ExchangeType:  opt.AMQP.ExchangeType,
+			PrefetchCount: opt.AMQP.PrefetchCount,
+			AutoDelete:    opt.AMQP.AutoDelete,
+		},
+	}
+
 	server, err := machinery.NewServer(cfg)
 	if err != nil {
 		return nil, errors.Wrap(err, "create server")
