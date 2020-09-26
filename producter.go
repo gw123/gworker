@@ -55,6 +55,7 @@ func (w *ProducerManager) PostJob(ctx context.Context, job Job) error {
 		signTask.ETA =  &eta
 	}
 
+
 	_, err = w.mqServer.SendTaskWithContext(ctx, signTask)
 	if err != nil {
 		return errors.Wrap(err, "SendTaskWithContext")

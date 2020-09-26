@@ -5,7 +5,6 @@ import "time"
 // Job 任务数据
 type Job interface {
 	GetName() string
-	Trace() []string
 	RetryCount() int
 	Delay() time.Duration
 }
