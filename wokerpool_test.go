@@ -23,6 +23,18 @@ type MyJob struct {
 	data string
 }
 
+func (j *MyJob) GetName() string {
+	return "my_job"
+}
+
+func (j *MyJob) RetryCount() int {
+	return 1
+}
+
+func (j *MyJob) Delay() time.Duration {
+	return 0
+}
+
 func NewMyJob(data string) *MyJob {
 	return &MyJob{
 		data: data,
@@ -39,13 +51,16 @@ func TestRunPoll(t *testing.T) {
 	var runTotal = 0
 	var total = 10 *0000
 	mutex := sync.Mutex{}
-	pool := NewWorkerPool(nil, time.Second*5, 1000, func(err error, job Tasker) {
+	pool := NewWorkerPool(nil, time.Second*5, 1000,
+		func(err error, job Job) {
 
-	}, func(worker Worker, job Tasker) {
+		},
+		func(worker Worker, job Jobber) {
 		mutex.Lock()
 		runTotal++
 		mutex.Unlock()
 	})
+
 	pool.PreSecondDealNum(10 *0000)
 	pool.Run()
 

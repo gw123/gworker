@@ -7,6 +7,12 @@ type Options struct {
 	AMQP          *AMQPOptions `yaml:"amqp" mapstructure:"amqp"`
 }
 
+/***
+   AMQPOptions
+   ExchangeType  交换机类型 ,当交换机类型是direct时候在投递任务队列使用BingingKey作为队列名,
+				 其他情况默认发送到DefaultQueue使用BingingKey作为路由
+   PrefetchCount 预先拉取任务数量
+ */
 type AMQPOptions struct {
 	Exchange      string `yaml:"exchange" `
 	ExchangeType  string `yaml:"exchange_type"  mapstructure:"exchange_type"`

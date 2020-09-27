@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"github.com/RichardKnop/machinery/v1/config"
 	"github.com/gw123/glog"
 	"github.com/gw123/gworker"
 	smsTask "github.com/gw123/gworker/demo/taskManager"
@@ -23,11 +22,11 @@ func main() {
 	flag.StringVar(&bindingKey, "binding", "sms", "binding-key")
 	flag.Parse()
 
-	conf := &config.Config{
+	conf := &gworker.Options{
 		Broker:        broker,
 		DefaultQueue:  queue,
 		ResultBackend: resultbackend,
-		AMQP: &config.AMQPConfig{
+		AMQP: &gworker.AMQPOptions{
 			Exchange:      exchange,
 			ExchangeType:  "direct",
 			BindingKey:    bindingKey,
