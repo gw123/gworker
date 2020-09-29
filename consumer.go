@@ -9,11 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-
-
-
 type Consumer interface {
-	RegisterTask(worker Jobber) error
 	StartWork(comsumeTag string, num int)
 	SetPostTaskHandler(postTaskHandler func(*tasks.Signature))
 	SetErrorHandler(errorHandler func(err error))
@@ -30,10 +26,10 @@ type ConsumerManager struct {
 	preConsumeHandler func(*Consumer) bool
 }
 
-func NewConsumer(opt * Options, consumerTag string) (*ConsumerManager, error) {
+func NewConsumer(opt * Options, jobber Jobber) (*ConsumerManager, error) {
 	cfg := &config.Config{
 		Broker:        opt.Broker,
-		DefaultQueue:  opt.DefaultQueue,
+		DefaultQueue:  jobber.GetName(),
 		ResultBackend: opt.ResultBackend,
 		AMQP: &config.AMQPConfig{
 			Exchange:      opt.AMQP.Exchange,
@@ -47,17 +43,20 @@ func NewConsumer(opt * Options, consumerTag string) (*ConsumerManager, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "create server")
 	}
-	worker := server.NewWorker(consumerTag, 0)
+	worker := server.NewWorker(jobber.GetName(), 0)
 	worker.SetErrorHandler(func(err error) {
 		glog.Errorf("Task Manager ErrorHandel %s", err.Error())
 	})
-	return &ConsumerManager{
+
+	m := &ConsumerManager{
 		mqServer: server,
 		worker:   worker,
-	}, nil
+	}
+	m.registerTask(jobber)
+	return m ,nil
 }
 
-func (w *ConsumerManager) RegisterTask(job Jobber) error {
+func (w *ConsumerManager) registerTask(job Jobber) error {
 	w.mqServer.RegisterTask(job.GetName(), func(data string) error {
 		err := json.Unmarshal([]byte(data), job)
 		if err != nil{

@@ -33,12 +33,10 @@ func main() {
 			PrefetchCount: 1,
 		},
 	}
-	taskManager, err := gworker.NewConsumer(conf, consumerTag)
+	taskManager, err := gworker.NewConsumer(conf, &smsTask.SMSTask{})
 	if err != nil {
 		glog.Errorf("NewTaskManager : %s", err.Error())
 		return
 	}
-
-	taskManager.RegisterTask(&smsTask.SMSTask{})
 	taskManager.StartWork(consumerTag, workerNum)
 }
