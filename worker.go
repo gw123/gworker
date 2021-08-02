@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+type ErrorHandle func(err error, job Job)
+type JobRunOverHandle func(worker Worker, job Job)
+
 func HandleSignal() chan os.Signal {
 	c := make(chan os.Signal)
 	signal.Notify(c, syscall.SIGINT)
@@ -19,8 +22,8 @@ func HandleSignal() chan os.Signal {
 
 type Worker interface {
 	IsBusy() bool
-	Push(job Jobber) error
-	Run()
+	Push(job Job) error
+	Run(context.Context)
 	Stop()
 	GetTotalJob() int
 	GetWorkerId() int
@@ -38,7 +41,7 @@ type Gworker struct {
 	waitTime          time.Duration
 	errorHandel       ErrorHandle
 	pool              WorkerPool
-	job               chan Jobber
+	job               chan Job
 	stopFlag          bool
 	status            uint
 	workerId          int
@@ -48,6 +51,27 @@ type Gworker struct {
 	preSecondDealNum  int
 	currentSecondDeal int
 	jobRunOverHandle  JobRunOverHandle
+	attempt           int
+}
+
+func (w *Gworker) Attempt() int {
+	return w.attempt
+}
+
+func (w *Gworker) OK() error {
+	return nil
+}
+
+func (w *Gworker) Skip() error {
+	return nil
+}
+
+func (w *Gworker) Retry(ctx context.Context, delay int) error {
+	return nil
+}
+
+func (w *Gworker) Body() []byte {
+	return []byte{}
 }
 
 func NewWorker(id int,
@@ -68,7 +92,7 @@ func NewWorker(id int,
 		waitGroup:   waitGroup,
 		cancelFunc:  cancelFunc,
 		errorHandel: pool.GetErrorHandle(),
-		job:         make(chan Jobber, jobSize),
+		job:         make(chan Job, jobSize),
 	}
 	return worker
 }
@@ -77,7 +101,7 @@ func (w *Gworker) PreSecondDealNum(num int) {
 	w.preSecondDealNum = num
 }
 
-func (w *Gworker) Push(job Jobber) error {
+func (w *Gworker) Push(job Job) error {
 	if w.stopFlag {
 		return errors.New("worker stop")
 	}
@@ -117,7 +141,7 @@ func (w *Gworker) SetErrorHandle(handel ErrorHandle) {
 	w.errorHandel = handel
 }
 
-func (w *Gworker) Run() {
+func (w *Gworker) Run(ctx context.Context) {
 	defer func() {
 		//fmt.Printf("%d stop \n", w.workerId)
 		if w.waitGroup != nil {
@@ -125,7 +149,7 @@ func (w *Gworker) Run() {
 		}
 	}()
 
-	for ; ; {
+	for {
 		select {
 		case job, ok := <-w.job:
 			if !ok {
@@ -147,7 +171,7 @@ func (w *Gworker) Run() {
 					}
 				}()
 				startTime := time.Now()
-				err = job.Handle()
+				err = job.JobHandler(ctx, w)
 				if err != nil {
 					w.errorHandel(err, job)
 				}

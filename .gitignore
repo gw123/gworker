@@ -53,6 +53,7 @@ Makefile
 go.sum
 env.sh
 .env
+demo/
 
 
 

@@ -7,8 +7,8 @@ import (
 )
 
 type WorkerPool interface {
-	Push(job Jobber) error
-	Run()
+	Push(job Job) error
+	Run(ctx context.Context)
 	Stop()
 	RecycleWorker(worker Worker)
 	Status() uint
@@ -70,9 +70,9 @@ func (pool *GworkerPool) init() {
 	go pool.StartTimer()
 }
 
-func (pool *GworkerPool) Push(job Jobber) error {
+func (pool *GworkerPool) Push(job Job) error {
 	if pool.currentSecondDeal >= pool.preSecondDealNum {
-		for ; pool.currentSecondDeal >= pool.preSecondDealNum; {
+		for pool.currentSecondDeal >= pool.preSecondDealNum {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}
@@ -91,10 +91,10 @@ func (pool *GworkerPool) StartTimer() {
 	}()
 }
 
-func (pool *GworkerPool) Run() {
+func (pool *GworkerPool) Run(ctx context.Context) {
 	pool.init()
 	for i := 0; i < pool.poolSize; i++ {
-		go pool.Workers[i].Run()
+		go pool.Workers[i].Run(ctx)
 	}
 }
 

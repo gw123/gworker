@@ -2,6 +2,7 @@ package gworker
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"runtime"
 	"strconv"
@@ -23,16 +24,32 @@ type MyJob struct {
 	data string
 }
 
+func (j *MyJob) UUID() string {
+	panic("implement me")
+}
+
+func (j *MyJob) Queue() string {
+	panic("implement me")
+}
+
+func (j *MyJob) Delay() int {
+	panic("implement me")
+}
+
+func (j *MyJob) Marshal() ([]byte, error) {
+	panic("implement me")
+}
+
+func (j *MyJob) JobHandler(ctx context.Context, job Jobber) error {
+	panic("implement me")
+}
+
 func (j *MyJob) GetName() string {
 	return "my_job"
 }
 
 func (j *MyJob) RetryCount() int {
 	return 1
-}
-
-func (j *MyJob) Delay() time.Duration {
-	return 0
 }
 
 func NewMyJob(data string) *MyJob {
@@ -49,20 +66,20 @@ func (j *MyJob) Handle() error {
 func TestRunPoll(t *testing.T) {
 
 	var runTotal = 0
-	var total = 10 *0000
+	var total = 10 * 0000
 	mutex := sync.Mutex{}
 	pool := NewWorkerPool(nil, time.Second*5, 1000,
 		func(err error, job Job) {
 
 		},
-		func(worker Worker, job Jobber) {
-		mutex.Lock()
-		runTotal++
-		mutex.Unlock()
-	})
+		func(worker Worker, job Job) {
+			mutex.Lock()
+			runTotal++
+			mutex.Unlock()
+		})
 
-	pool.PreSecondDealNum(10 *0000)
-	pool.Run()
+	pool.PreSecondDealNum(10 * 0000)
+	pool.Run(context.Background())
 
 	for i := 1; i <= total; i++ {
 		job := NewMyJob(fmt.Sprintf("id: %d", i))
