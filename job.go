@@ -2,6 +2,8 @@ package gworker
 
 import (
 	"context"
+
+	"github.com/gw123/gworker/rabbiter"
 )
 
 type Job interface {
@@ -34,6 +36,6 @@ type JobHandler func(ctx context.Context, job Jobber) error
 
 type JobManager interface {
 	Dispatch(ctx context.Context, job Job) error
-	Do(ctx context.Context, queue string, handler JobHandler) error
+	Do(ctx context.Context, queue string, handler JobHandler) (rabbiter.Consumer, error)
 	Close() error
 }

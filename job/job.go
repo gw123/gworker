@@ -3,9 +3,10 @@ package job
 import (
 	"context"
 	"fmt"
+	"sync"
+
 	"github.com/gw123/gworker"
 	"github.com/gw123/gworker/rabbiter"
-	"sync"
 
 	"github.com/pkg/errors"
 )
@@ -95,12 +96,12 @@ func (m *JobManager) Dispatch(ctx context.Context, job gworker.Job) error {
 	return nil
 }
 
-// Do 从消息队列消费消息并交给 JobHandler 处理。这是一个阻塞函数。
-func (m *JobManager) Do(ctx context.Context, queueName string, handler gworker.JobHandler) error {
+// Do 从消息队列消费消息并交给 JobHandler 处理。
+func (m *JobManager) Do(ctx context.Context, queueName string, handler gworker.JobHandler) (rabbiter.Consumer, error) {
 	m.mux.RLock()
 	if m.closed {
 		m.mux.RUnlock()
-		return errors.New("job manager closed")
+		return nil, errors.New("job manager closed")
 	}
 	m.mux.RUnlock()
 
@@ -111,14 +112,13 @@ func (m *JobManager) Do(ctx context.Context, queueName string, handler gworker.J
 		return handler(ctx, &Jobber{job})
 	})
 	if err := c.Listen(ctx); err != nil {
-		return errors.Wrapf(err, "job manager could not listen to queue %s", queueName)
+		return nil, errors.Wrapf(err, "job manager could not listen to queue %s", queueName)
 	}
 
 	m.mux.Lock()
 	m.cs = append(m.cs, c)
 	m.mux.Unlock()
-
-	return c.Wait()
+	return c, nil
 }
 
 // Do 从消息队列消费消息并交给 JobHandler 处理。这是一个阻塞函数。
@@ -153,7 +153,9 @@ func (m *JobManager) Close() error {
 	defer m.mux.Unlock()
 
 	for _, c := range m.cs {
-		c.Stop()
+		if c.IsRunning() {
+			c.Stop()
+		}
 	}
 	m.closed = true
 	m.cs = m.cs[:0]

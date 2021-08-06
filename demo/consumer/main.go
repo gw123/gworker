@@ -72,9 +72,19 @@ func main() {
 	ctx := context.Background()
 
 	go func() {
-		if err := jobManager.DoJobs(ctx, MyJob{}); err != nil {
+		job := MyJob{}
+		consumer, err := jobManager.Do(ctx, job.Queue(), job.JobHandler)
+		if err != nil {
 			glog.DefaultLogger().Error(err)
 		}
+		go func() {
+			time.Sleep(time.Second * 6)
+			consumer.Stop()
+			glog.Info("consumer stop")
+		}()
+
+		consumer.Wait()
+
 	}()
 	time.Sleep(time.Second)
 
