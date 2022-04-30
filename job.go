@@ -6,7 +6,7 @@ import (
 	"github.com/gw123/gworker/rabbiter"
 )
 
-type Job interface {
+type QueueJob interface {
 	UUID() string
 	Queue() string
 	Delay() int
@@ -15,7 +15,7 @@ type Job interface {
 }
 
 /**
-  JobHandler  operate Job
+  JobHandler  operate QueueJob
    1. Body() get job payload
    2. Attempt()  current msg tried times
    3. Ok() ack current message
@@ -35,7 +35,7 @@ type Jobber interface {
 type JobHandler func(ctx context.Context, job Jobber) error
 
 type JobManager interface {
-	Dispatch(ctx context.Context, job Job) error
+	Dispatch(ctx context.Context, job QueueJob) error
 	Do(ctx context.Context, queue string, handler JobHandler) (rabbiter.Consumer, error)
 	Close() error
 }

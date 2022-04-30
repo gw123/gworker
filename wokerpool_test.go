@@ -3,13 +3,16 @@ package gworker
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"runtime"
 	"strconv"
-	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/gw123/glog"
 )
+
+var runTotal int64
 
 func GetGID() uint64 {
 	b := make([]byte, 64)
@@ -21,72 +24,39 @@ func GetGID() uint64 {
 }
 
 type MyJob struct {
-	data string
+	data []byte
 }
 
-func (j *MyJob) UUID() string {
-	panic("implement me")
+func (j *MyJob) Run(ctx context.Context) error {
+	atomic.AddInt64(&runTotal, 1)
+	return nil
 }
 
-func (j *MyJob) Queue() string {
-	panic("implement me")
+func (j *MyJob) Stop() {
+	return
 }
 
-func (j *MyJob) Delay() int {
-	panic("implement me")
-}
-
-func (j *MyJob) Marshal() ([]byte, error) {
-	panic("implement me")
-}
-
-func (j *MyJob) JobHandler(ctx context.Context, job Jobber) error {
-	panic("implement me")
-}
-
-func (j *MyJob) GetName() string {
-	return "my_job"
-}
-
-func (j *MyJob) RetryCount() int {
-	return 1
-}
-
-func NewMyJob(data string) *MyJob {
+func NewMyJob(data []byte) *MyJob {
 	return &MyJob{
 		data: data,
 	}
 }
 
-func (j *MyJob) Handle() error {
-	//fmt.Printf("GID:%d ,%s\n", GetGID(), j.data)
-	return nil
-}
-
 func TestRunPoll(t *testing.T) {
+	var total int64 = 10000000
+	var i int64 = 0
+	pool := NewWorkerPool(nil, time.Second*5, 6)
 
-	var runTotal = 0
-	var total = 10 * 0000
-	mutex := sync.Mutex{}
-	pool := NewWorkerPool(nil, time.Second*5, 1000,
-		func(err error, job Job) {
+	pool.PreSecondDealNum(1000 * 0000)
+	pool.Run()
 
-		},
-		func(worker Worker, job Job) {
-			mutex.Lock()
-			runTotal++
-			mutex.Unlock()
-		})
-
-	pool.PreSecondDealNum(10 * 0000)
-	pool.Run(context.Background())
-
-	for i := 1; i <= total; i++ {
-		job := NewMyJob(fmt.Sprintf("id: %d", i))
+	for ; i < total; i++ {
+		job := NewMyJob(nil)
 		pool.Push(job)
 	}
 
 	pool.Stop()
+	glog.Infof(" %d --- %d", total, runTotal)
 	if runTotal != total {
 		t.Errorf("push job num %d not equal run job num %d", total, runTotal)
 	}

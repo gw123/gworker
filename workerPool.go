@@ -7,8 +7,8 @@ import (
 )
 
 type WorkerPool interface {
-	Push(job Job) error
-	Run(ctx context.Context)
+	Push(job WorkerJob) error
+	Run()
 	Stop()
 	RecycleWorker(worker Worker)
 	Status() uint
@@ -24,7 +24,6 @@ type GworkerPool struct {
 	status               uint
 	ctx                  context.Context
 	timeout              time.Duration
-	Workers              []Worker
 	index                int
 	cancelFunc           context.CancelFunc
 	poolSize             int
@@ -39,7 +38,7 @@ type GworkerPool struct {
 	jobRunOverHandle     JobRunOverHandle
 }
 
-func NewWorkerPool(ctx context.Context, timeout time.Duration, poolSize int, errHandle ErrorHandle, overHandle JobRunOverHandle) *GworkerPool {
+func NewWorkerPool(ctx context.Context, timeout time.Duration, poolSize int) *GworkerPool {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -47,37 +46,23 @@ func NewWorkerPool(ctx context.Context, timeout time.Duration, poolSize int, err
 	pool := &GworkerPool{
 		ctx:              ctx,
 		timeout:          timeout,
-		Workers:          make([]Worker, 0),
 		cancelFunc:       cancelFunc,
 		poolSize:         poolSize,
 		waitGroup:        &sync.WaitGroup{},
 		freePool:         make(chan Worker, poolSize),
-		errorHandel:      errHandle,
-		jobRunOverHandle: overHandle,
+		preSecondDealNum: 100000,
 	}
 	return pool
 }
 
-func (pool *GworkerPool) init() {
-	for i := 0; i < pool.poolSize; i++ {
-		pool.waitGroup.Add(1)
-		worker := NewWorker(i, pool.ctx, pool.timeout, pool.waitGroup, pool)
-		worker.SetJobRunOverHandle(pool.jobRunOverHandle)
-		worker.SetErrorHandle(pool.errorHandel)
-		pool.freePool <- worker
-		pool.Workers = append(pool.Workers, worker)
-	}
-	go pool.StartTimer()
-}
-
-func (pool *GworkerPool) Push(job Job) error {
-	if pool.currentSecondDeal >= pool.preSecondDealNum {
-		for pool.currentSecondDeal >= pool.preSecondDealNum {
-			time.Sleep(100 * time.Millisecond)
-		}
-	}
+func (pool *GworkerPool) Push(job WorkerJob) error {
+	//if pool.currentSecondDeal >= pool.preSecondDealNum {
+	//	for pool.currentSecondDeal >= pool.preSecondDealNum {
+	//		time.Sleep(100 * time.Millisecond)
+	//	}
+	//}
 	worker := <-pool.freePool
-	pool.currentSecondDeal++
+	// pool.currentSecondDeal++
 	return worker.Push(job)
 }
 
@@ -91,11 +76,14 @@ func (pool *GworkerPool) StartTimer() {
 	}()
 }
 
-func (pool *GworkerPool) Run(ctx context.Context) {
-	pool.init()
+func (pool *GworkerPool) Run() {
 	for i := 0; i < pool.poolSize; i++ {
-		go pool.Workers[i].Run(ctx)
+		pool.waitGroup.Add(1)
+		worker := NewWorker(i, pool.timeout, pool.waitGroup, pool)
+		go worker.Run(pool.ctx)
+		pool.freePool <- worker
 	}
+	go pool.StartTimer()
 }
 
 func (pool *GworkerPool) Stop() {
@@ -103,13 +91,8 @@ func (pool *GworkerPool) Stop() {
 		return
 	}
 	pool.cancelFunc()
-	//glog.Debug("wait all worker stop")
 	pool.stopFlag = true
-	for _, worker := range pool.Workers {
-		worker.Stop()
-	}
 	pool.waitGroup.Wait()
-	//glog.Debug("all run over")
 	return
 }
 
@@ -117,25 +100,6 @@ func (pool *GworkerPool) IsStop() bool {
 	return pool.stopFlag
 }
 
-//func (pool *GworkerPool) Stop() chan int {
-//	pool.cancelFunc()
-//	glog.Debug("wait all worker stop")
-//	for _, worker := range pool.Workers {
-//		worker.Stop()
-//	}
-//	overCh := make(chan int, 1)
-//	go func() {
-//		fmt.Println("xxxxxxxxxxxxxxxxxxxxx")
-//		pool.waitGroup.Wait()
-//		fmt.Println("####################")
-//		overCh <- 1
-//	}()
-//	return overCh
-//}
-
-/***
-  在worker完成一个job后,将其放回free队列等待接收下一个任务
-*/
 func (pool *GworkerPool) RecycleWorker(worker Worker) {
 	pool.freePool <- worker
 }
@@ -160,9 +124,6 @@ func (pool *GworkerPool) GetJobRunOverHandle() JobRunOverHandle {
 	return pool.jobRunOverHandle
 }
 
-/***
-设置每秒最大处理任务数量
-*/
 func (pool *GworkerPool) PreSecondDealNum(num int) {
 	pool.preSecondDealNum = num
 }

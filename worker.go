@@ -2,16 +2,17 @@ package gworker
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
-type ErrorHandle func(err error, job Job)
-type JobRunOverHandle func(worker Worker, job Job)
+type ErrorHandle func(err error, job WorkerJob)
+type JobRunOverHandle func(worker Worker, job WorkerJob)
 
 func HandleSignal() chan os.Signal {
 	c := make(chan os.Signal)
@@ -22,9 +23,8 @@ func HandleSignal() chan os.Signal {
 
 type Worker interface {
 	IsBusy() bool
-	Push(job Job) error
+	Push(job WorkerJob) error
 	Run(context.Context)
-	Stop()
 	GetTotalJob() int
 	GetWorkerId() int
 	Status() uint
@@ -41,12 +41,11 @@ type Gworker struct {
 	waitTime          time.Duration
 	errorHandel       ErrorHandle
 	pool              WorkerPool
-	job               chan Job
+	job               chan WorkerJob
 	stopFlag          bool
 	status            uint
 	workerId          int
 	size              int
-	runOverTotal      int
 	runCastNs         int64
 	preSecondDealNum  int
 	currentSecondDeal int
@@ -75,24 +74,19 @@ func (w *Gworker) Body() []byte {
 }
 
 func NewWorker(id int,
-	parent context.Context,
 	timeout time.Duration,
 	waitGroup *sync.WaitGroup,
 	pool WorkerPool,
 ) *Gworker {
-	ctx, cancelFunc := context.WithCancel(parent)
-	jobSize := 10
+	jobSize := 100
 	worker := &Gworker{
 		workerId:    id,
-		ctx:         ctx,
 		pool:        pool,
-		stopFlag:    false,
 		timeout:     timeout,
 		size:        jobSize,
 		waitGroup:   waitGroup,
-		cancelFunc:  cancelFunc,
 		errorHandel: pool.GetErrorHandle(),
-		job:         make(chan Job, jobSize),
+		job:         make(chan WorkerJob, jobSize),
 	}
 	return worker
 }
@@ -101,7 +95,7 @@ func (w *Gworker) PreSecondDealNum(num int) {
 	w.preSecondDealNum = num
 }
 
-func (w *Gworker) Push(job Job) error {
+func (w *Gworker) Push(job WorkerJob) error {
 	if w.stopFlag {
 		return errors.New("worker stop")
 	}
@@ -114,11 +108,6 @@ func (w *Gworker) Push(job Job) error {
 
 func (w *Gworker) GetTotalJob() int {
 	return len(w.job)
-}
-
-func (w *Gworker) Stop() {
-	w.stopFlag = true
-	close(w.job)
 }
 
 func (w *Gworker) IsBusy() bool {
@@ -143,18 +132,18 @@ func (w *Gworker) SetErrorHandle(handel ErrorHandle) {
 
 func (w *Gworker) Run(ctx context.Context) {
 	defer func() {
-		//fmt.Printf("%d stop \n", w.workerId)
+		// glog.Debugf("%d stop \n", w.workerId)
 		if w.waitGroup != nil {
 			w.waitGroup.Done()
 		}
 	}()
 
-	for {
+	for !w.stopFlag {
 		select {
-		case job, ok := <-w.job:
-			if !ok {
-				return
-			}
+		case <-ctx.Done():
+			w.stopFlag = true
+			break
+		case job := <-w.job:
 			if job == nil {
 				continue
 			}
@@ -164,20 +153,16 @@ func (w *Gworker) Run(ctx context.Context) {
 					if w.jobRunOverHandle != nil {
 						w.jobRunOverHandle(w, job)
 					}
-					//防止job pnaic 影响协程继续正常工作
+
 					if errInfo := recover(); errInfo != nil {
 						info, _ := errInfo.(string)
 						w.errorHandel(errors.New("recover from panic "+info), job)
 					}
 				}()
-				startTime := time.Now()
-				err = job.JobHandler(ctx, w)
+				err = job.Run(ctx)
 				if err != nil {
 					w.errorHandel(err, job)
 				}
-				w.runOverTotal++
-				endTime := time.Now()
-				w.runCastNs += endTime.Sub(startTime).Nanoseconds()
 			}()
 			w.pool.RecycleWorker(w)
 		}

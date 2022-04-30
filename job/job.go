@@ -59,8 +59,8 @@ func NewJobManager(opts JobManagerOptions) *JobManager {
 	}
 }
 
-// Dispatch 序列化 Job ，发送到消息队列
-func (m *JobManager) Dispatch(ctx context.Context, job gworker.Job) error {
+// Dispatch 序列化 QueueJob ，发送到消息队列
+func (m *JobManager) Dispatch(ctx context.Context, job gworker.QueueJob) error {
 	body, err := job.Marshal()
 	if err != nil {
 		return errors.Wrap(err, "job manager failed to marshal job")
@@ -122,7 +122,7 @@ func (m *JobManager) Do(ctx context.Context, queueName string, handler gworker.J
 }
 
 // Do 从消息队列消费消息并交给 JobHandler 处理。这是一个阻塞函数。
-func (m *JobManager) DoJobs(ctx context.Context, job gworker.Job) error {
+func (m *JobManager) DoJobs(ctx context.Context, job gworker.QueueJob) error {
 	m.mux.RLock()
 	if m.closed {
 		m.mux.RUnlock()

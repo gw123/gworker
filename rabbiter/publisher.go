@@ -20,6 +20,7 @@ type PublishRabbiter struct {
 
 // Publish sends message through exchange.
 func (r *PublishRabbiter) Publish(ctx context.Context, ex *Exchange, m *Message) error {
+
 	ch, err := r.pooledChannel(ctx)
 	if err != nil {
 		return err
@@ -29,7 +30,6 @@ func (r *PublishRabbiter) Publish(ctx context.Context, ex *Exchange, m *Message)
 	if err := r.declareExchange(ch, ex); err != nil {
 		return err
 	}
-
 	return ch.Publish(
 		ex.Name,
 		m.RoutingKey,
