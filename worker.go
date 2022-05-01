@@ -163,7 +163,9 @@ func (w *Gworker) Run(ctx context.Context) {
 				}()
 				err = job.Run(ctx)
 				if err != nil {
-					w.errorHandel(err, job)
+					if w.errorHandel != nil {
+						w.errorHandel(err, job)
+					}
 				}
 			}()
 			w.pool.RecycleWorker(w)
