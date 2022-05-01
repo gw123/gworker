@@ -155,8 +155,10 @@ func (w *Gworker) Run(ctx context.Context) {
 					}
 
 					if errInfo := recover(); errInfo != nil {
-						info, _ := errInfo.(string)
-						w.errorHandel(errors.New("recover from panic "+info), job)
+						if w.errorHandel != nil {
+							info, _ := errInfo.(string)
+							w.errorHandel(errors.New("recover from panic "+info), job)
+						}
 					}
 				}()
 				err = job.Run(ctx)
